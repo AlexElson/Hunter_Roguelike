@@ -1,7 +1,7 @@
 # Hunter_Roguelike
-Survival wildlife-hunting 'roguelike' utilizing artificial intelligence to simulate animal behavior. Procedurally-generated landscapes are handled by the 'Diamond-Square' Algorithm, a method for generating heightmaps from a  grid of points. For each step of the algorithm, midpoints between all squares are deteremined by an average of those adjacent points - with an added random factor. Dijskstra's algorithm directs animals' pathfinding. Animals act intelligently based on their 'category.' Rabbits are attracted to the smell of carrots and can be lured into traps. Wolves, on the other hand, will chase down and attack the player, acting as scavengers.
+HunterRL is a survival wildlife-hunting 'roguelike' utilizing artificial intelligence to simulate animal behavior. Procedurally-generated landscapes are handled by the 'Diamond-Square' Algorithm, a method for generating heightmaps from a  grid of points. For each step of the algorithm, midpoints between all squares are deteremined by an average of those adjacent points - with an added random factor. Dijskstra's algorithm directs animals' pathfinding. Animals act intelligently based on their 'category.' Rabbits are attracted to the smell of carrots and can be lured into traps. Wolves, on the other hand, will chase down and attack the player, acting as scavengers attracted by the smell of any rabbit corpse.
 
-This game was created during the 2012 7-Day Roguelike Challenge.
+This game was created during under a time-limit 2012 7-Day Roguelike Challenge.
 
 ![Alt text](/Screenshots/HunterRL_3.png?raw=true "Cover")
 
@@ -24,7 +24,7 @@ Pressing 0 (Zero) while preforming an action will cancel it.
 Rabbits are attracted by carrots.
 Wolves are attracted by rabbit corpses.
 
-When the Tracker is equipped, you will be able to see enemies who are out of your line-of-sight.
+While the Tracker is equipped, you will be able to see enemies who are out of your line-of-sight.
 Rifles can be found on deceased hunters in the wilderness.
 
 ![Alt text](/Screenshots/HunterRL_2.png?raw=true "Cover")
