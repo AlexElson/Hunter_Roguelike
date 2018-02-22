@@ -1,0 +1,1383 @@
+Win(null)[HunterRL]
+randomize
+path=project()+"tileset.bmp"
+imi = open image (path)
+imb = open blt (imi)
+
+Int type[16641]
+Int xx[16641]
+Int yy[16641]
+Int zz[16641]
+Int ulist[16641]
+Int clines[16641]
+Int shadow[16641]
+Int olist[16641]
+Int clist[16641]
+Int dist[16641]
+
+Text item[300]
+Int itemx[300]
+Int itemy[300]
+
+Text inv[5]
+Do n=0,4
+  inv[n]=""
+Loop
+
+Text news[6]
+Do n=0,5
+  news[n]=""
+Loop
+news[3]="Welcome"
+
+Text enemy[30]
+Int ex[30]
+Int ey[30]
+Int espeed[30]
+Int emove[30]
+Int edest[30]
+Int ehp[30]
+Int edead[30]
+Do n=0,29
+  enemy[n]=""
+  ex[n]=-1
+  ey[n]=-1
+  espeed[n]=10
+  emove[n]=0
+  edest[n]=0
+  ehp[n]=0
+  edead[n]=0
+Loop
+
+x=0;y=0;z=0
+loa=4
+view=15
+turn=0
+hp=100
+equip=""
+newnpc=100
+playerspeed=10
+activatetrap=0
+bullets=8
+drown=10
+kills=0
+
+Display "Generating Landscape..."
+resetmap:
+Do n=0,16640
+  type[n]=0
+  xx[n]=n%129
+  yy[n]=n/129
+  zz[n]=-1
+  ulist[n]=0  //already used/set height to list
+  clines[n]=0  //tiles with cross lines on them
+  shadow[n]=0 //shadows
+
+  olist[n]=0 //Pathfinding algorithm
+  clist[n]=0
+  dist[n]=0
+Loop
+Do n=0,299
+  item[n]=""
+  itemx[n]=-1
+  itemy[n]=-1
+Loop
+
+zz[0]=random(50)
+zz[128]=random(50)
+zz[16640-128]=random(50)
+zz[16640]=random(50)
+ulist[0]=1
+ulist[128]=1
+ulist[16640-128]=1
+ulist[16640]=1
+
+Do nnnn=0,20
+  key=readkey()
+  ///////////////////////Diamond Step
+  Do n=0,16640
+    If (ulist[n]=1)
+      Do m=1,200
+        loa=4
+        If (xx[n]+m<=128 And yy[n]+m<=128) clines[n+m+m*129]=1;loa=loa-1
+        If (xx[n]-m>=0 And yy[n]+m<=128) clines[n-m+m*129]=1;loa=loa-1
+        If (xx[n]+m<=128 And yy[n]-m>=0) clines[n+m-m*129]=1;loa=loa-1
+        If (xx[n]-m>=0 And yy[n]-m>=0) clines[n-m-m*129]=1;loa=loa-1
+        If (loa=4) Break
+      Loop
+    Endif
+  Loop
+  Do n=0,16640
+    If (clines[n]=1 And clines[n+1+129]=1 And clines[n+1-129]=1 And clines[n-1+129]=1 And clines[n-1-129]=1 And ulist[n]=0)
+      c1=0; c2=0; c3=0; c4=0; dis=0; loa=4
+      Do m=1,200
+        loa=4
+        If (ulist[n+m+m*129]=1) c1=n+m+m*129; loa=loa-1; dis=m
+        If (ulist[n-m+m*129]=1) c2=n-m+m*129; loa=loa-1; dis=m
+        If (ulist[n-m-m*129]=1) c3=n-m-m*129; loa=loa-1; dis=m
+        If (ulist[n+m-m*129]=1) c4=n+m-m*129; loa=loa-1; dis=m
+        If (loa=0) Break
+      Loop
+      zz[n]=(zz[c1]+zz[c2]+zz[c3]+zz[c4])/4+random(dis)-dis/2; ulist[n]=1
+    Endif
+  Loop
+  Do n=0,16640
+    clines[n]=0
+  Loop
+  ///////////////////////Square Step
+  Do n=0,16640
+    If (ulist[n]=1)
+      Do m=1,200
+        loa=4
+        If (xx[n]+m<=128) clines[n+m]=1;loa=loa-1
+        If (xx[n]-m>=0) clines[n-m]=1;loa=loa-1
+        If (yy[n]+m<=128) clines[n+m*129]=1;loa=loa-1
+        If (yy[n]-m>=0) clines[n-m*129]=1;loa=loa-1
+        If (loa=4)
+          Break
+        Endif
+      Loop     
+    Endif
+  Loop
+  Do n=0,16640
+    dis=0
+    If (clines[n]=1 And ulist[n]=0)
+      If (yy[n]=0 And clines[n+1]=1 And clines[n-1]=1 And clines[n+129]=1)
+        c1=0; c2=0; c3=0; c4=0; dis=200; loa=4
+        Do m=1,200
+          loa=3
+          If (ulist[n+m]=1) c1=n+m; loa=loa-1; dis=m
+          If (ulist[n-m]=1) c2=n-m; loa=loa-1; dis=m
+          If (ulist[n+m*129]=1) c3=n+m*129; loa=loa-1; dis=m
+          If (loa=0) Break
+        Loop
+        zz[n]=(zz[c1]+zz[c2]+zz[c3])/3+random(dis)-dis/2; ulist[n]=1
+        Endif
+      If (xx[n]=128 And clines[n-129]=1 And clines[n-1]=1 And clines[n+129]=1)
+        c1=0; c2=0; c3=0; c4=0; dis=200; loa=4
+        Do m=1,200
+          loa=3
+          If (ulist[n-m]=1) c2=n-m; loa=loa-1; dis=m
+          If (ulist[n+m*129]=1) c3=n+m*129; loa=loa-1; dis=m
+          If (ulist[n-m*129]=1) c4=n-m*129; loa=loa-1 ; dis=m
+          If (loa=0) Break
+        Loop
+        zz[n]=(zz[c2]+zz[c3]+zz[c4])/3+random(dis)-dis/2; ulist[n]=1
+        Endif
+      If (yy[n]=128 And clines[n+1]=1 And clines[n-1]=1 And clines[n-129]=1)
+        c1=0; c2=0; c3=0; c4=0; dis=200; loa=4
+        Do m=1,200
+          loa=3
+          If (ulist[n+m]=1) c1=n+m; loa=loa-1; dis=m
+          If (ulist[n-m]=1) c2=n-m; loa=loa-1; dis=m
+          If (ulist[n-m*129]=1) c4=n-m*129; loa=loa-1 ; dis=m
+          If (loa=0) Break
+        Loop
+        zz[n]=(zz[c1]+zz[c2]+zz[c4])/3+random(dis)-dis/2; ulist[n]=1
+      Endif
+      If (xx[n]=0 And clines[n+1]=1 And clines[n-129]=1 And clines[n+129]=1)
+        c1=0; c2=0; c3=0; c4=0; dis=200; loa=4
+        Do m=1,200
+          loa=3
+          If (ulist[n+m]=1) c1=n+m; loa=loa-1; dis=m
+          If (ulist[n+m*129]=1) c3=n+m*129; loa=loa-1; dis=m
+          If (ulist[n-m*129]=1) c4=n-m*129; loa=loa-1 ; dis=m
+          If (loa=0) Break
+        Loop
+        zz[n]=(zz[c1]+zz[c3]+zz[c4])/3+random(dis)-dis/2; ulist[n]=1
+      Endif
+      If (xx[n]!=0 And yy[n]!=0 And xx[n]!=128 And yy[n]!=128 And clines[n+1]=1 And clines[n-129]=1 And clines[n+129]=1 And clines[n-1]=1)
+        c1=0; c2=0; c3=0; c4=0; dis=200; loa=4
+        Do m=1,200
+          loa=4
+          If (ulist[n+m]=1) c1=n+m; loa=loa-1; dis=m
+          If (ulist[n-m]=1) c2=n-m; loa=loa-1; dis=m
+          If (ulist[n+m*129]=1) c3=n+m*129; loa=loa-1; dis=m
+          If (ulist[n-m*129]=1) c4=n-m*129; loa=loa-1 ; dis=m
+          If (loa=0) Break
+        Loop
+        zz[n]=(zz[c1]+zz[c2]+zz[c3]+zz[c4])/4+random(dis)-dis/2; ulist[n]=1
+        Endif
+      Endif
+  Loop
+  Do n=0,16640
+    clines[n]=0
+  Loop
+Loop
+////////////////////////////////Change type based on zz axis
+Do n=0,16640
+  If (zz[n]<=35 And zz[n]>15) type[n]=0 //solidcolor(Darkgreen)
+  If (zz[n]<12) type[n]=1 //solidcolor(Darkblue)
+  If (zz[n]>35) type[n]=2 //solidcolor(Darkbrown)
+  If (zz[n]<=15 And zz[n]>=12) type[n]=3 //solidcolor(Yellow)
+  //////////////////////////////Add Trees
+  addtree=-1
+  addtree=random(20)
+  If (type[n]=0 And addtree=0 And type[n-1]!=4 And type[n-129]!=4) type[n]=4
+Loop
+//////////////////Take away single tiles
+Do n=0,16640
+  If (xx[n]<128 And xx[n]>0 And yy[n]<128 And yy[n]>0) 
+    If (type[n+1]!=type[n] And type[n-1]!=type[n] And type[n+129]!=type[n] And type[n-129]!=type[n] And type[n]!=4) type[n]=type[n+1]
+  Endif
+Loop
+wateramount=0
+/////////////////////Redo if too much water
+Do n=0,16640
+  If (type[n]=1) wateramount=wateramount+1
+Loop
+If (wateramount>8000 And wateramount>1000) Goto resetmap
+
+//////////////////////Start Wood House
+Display "Creating Starting Building..."
+houseredo:
+hx=random(129-18)+5
+hy=random(129-18)+5
+hw=random(4)+4
+hh=random(4)+4
+hdone=0
+Do n=0,16640
+  If (type[n]=0 And xx[n]=hx And yy[n]=hy) 
+    Do m=0,hw
+      Do mm=0,hh
+        type[xx[n]+m+(yy[n]+mm)*129]=6
+      Loop
+    Loop
+    hdone=1
+    Break
+  Endif
+Loop
+If (hdone=0) Goto houseredo
+////////////////////////////////Wood House walls
+wallamount=0
+Do n=0,16640
+  addhwall=0
+  If (type[n+1]=6) addhwall=addhwall+1
+  If (type[n-1]=6) addhwall=addhwall+1
+  If (type[n+129]=6) addhwall=addhwall+1
+  If (type[n-129]=6) addhwall=addhwall+1
+  If (type[n+129+1]=6) addhwall=addhwall+1
+  If (type[n+129-1]=6) addhwall=addhwall+1
+  If (type[n-129+1]=6) addhwall=addhwall+1
+  If (type[n-129-1]=6) addhwall=addhwall+1
+  If ((addhwall=1 Or addhwall=2 Or addhwall=3) And type[n]!=6 And yy[n]<128) type[n]=5
+  If (addhwall=2 Or addhwall=3) wallamount=wallamount+1 
+Loop
+///////////////////////////////Wood House Door
+housedoor:
+doorplace=random(wallamount)
+doorplacec=0
+Do n=0,16640
+  If (type[n]=5) doorplacec=doorplacec+1
+  If (doorplacec=doorplace)
+    If (type[n+1]=6 Or type[n-1]=6 Or type[n+129]=6 Or type[n-129]=6) 
+      type[n]=7; Break
+    Endif
+    Else Goto housedoor
+  Endif
+Loop
+playerx=hx+2; playery=hy+2
+/////////////////////////////////////Place Carrots
+Display "Placing items..."
+addcar=0
+Do n=0,16640
+  If (type[n]=6) addcar=addcar+1
+Loop
+addcarc=random(addcar)+1
+addcar=0
+Do n=0,16640
+  If (type[n]=6) addcar=addcar+1
+  If (addcar=addcarc)
+    Do nn=0,299
+      If (item[nn]="") 
+        Do nnn=0,7
+          item[nn+nnn]="Carrot"
+          itemx[nn+nnn]=xx[n]; itemy[nn+nnn]=yy[n]
+        Loop
+        Break
+      Endif
+    Loop
+    Break
+  Endif
+Loop
+/////////////////////////////////////Place Tracker
+addcar=0
+Do n=0,16640
+  If (type[n]=6) addcar=addcar+1
+Loop
+addcarc=random(addcar)+1
+addcar=0
+Do n=0,16640
+  If (type[n]=6) addcar=addcar+1
+  If (addcar=addcarc)
+    Do nn=0,299
+      If (item[nn]="") 
+        item[nn]="Tracker"
+        itemx[nn]=xx[n]; itemy[nn]=yy[n]
+        Break
+      Endif
+    Loop
+    Break
+  Endif
+Loop
+/////////////////////////////////////Place Knives
+addcar=0
+Do n=0,16640
+  If (type[n]=6) addcar=addcar+1
+Loop
+addcarc=random(addcar)+1
+addcar=0
+Do n=0,16640
+  If (type[n]=6) addcar=addcar+1
+  If (addcar=addcarc)
+    Do nn=0,299
+      If (item[nn]="") 
+        Do nnn=0,3
+          item[nn+nnn]="Knife"
+          itemx[nn+nnn]=xx[n]; itemy[nn+nnn]=yy[n]
+        Loop
+        Break
+      Endif
+    Loop
+    Break
+  Endif
+Loop
+/////////////////////////////////////Place Closed Traps
+addcar=0
+Do n=0,16640
+  If (type[n]=6) addcar=addcar+1
+Loop
+addcarc=random(addcar)+1
+addcar=0
+Do n=0,16640
+  If (type[n]=6) addcar=addcar+1
+  If (addcar=addcarc)
+    Do nn=0,299
+      If (item[nn]="") 
+        Do nnn=0,2
+          item[nn+nnn]="Closed Trap"
+          itemx[nn+nnn]=xx[n]; itemy[nn+nnn]=yy[n]
+        Loop
+        Break
+      Endif
+    Loop
+    Break
+  Endif
+Loop
+/////////////////////////////////////Place Hunter Corpse
+addcar=0
+Do n=0,16640
+  If (type[n]=0) addcar=addcar+1
+Loop
+addcarc=random(addcar)+1
+addcar=0
+Do n=0,16640
+  If (type[n]=0) addcar=addcar+1
+  If (addcar=addcarc)
+    Do nn=0,299
+      If (item[nn]="") 
+        item[nn]="Hunter Corpse"
+        itemx[nn]=xx[n]; itemy[nn]=yy[n]
+        dir=random(8); aa=0
+        If (dir=0 And type[n+1]=0) dir=1; aa=1
+        If (dir=1 And type[n-1]=0) dir=-1; aa=1
+        If (dir=2 And type[n+129]=0) dir=129; aa=1
+        If (dir=3 And type[n-129]=0) dir=-129; aa=1
+        If (dir=4 And type[n+129+1]=0) dir=129+1; aa=1
+        If (dir=5 And type[n+129-1]=0) dir=129-1; aa=1
+        If (dir=6 And type[n-129+1]=0) dir=-129+1; aa=1
+        If (dir=7 And type[n-129-1]=0) dir=-129-1; aa=1
+        If (aa=0) dir=0
+        item[nn+1]="Rifle"
+        itemx[nn+1]=xx[n+dir]; itemy[nn+1]=yy[n+dir]  
+        Break
+      Endif
+    Loop
+    Break
+  Endif
+Loop
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////Game
+Do
+  selectscreen(1)
+  cls
+  key=readkey()
+ 
+  ///////////////////////////////////////////////////////////////Movement
+  oldpos=playerx+playery*129
+  n=playerx+playery*129
+  m1=0; m2=0; m3=0; m4=0; m5=0; m6=0; m7=0; m8=0
+  Do en=0,29
+   If (enemy[en]!="")
+    ntpc=ex[en]+ey[en]*129; ntec=playerx+playery*129
+    If (ntec+1=ntpc) m1=1
+    If (ntec-1=ntpc) m2=1
+    If (ntec+129=ntpc) m3=1
+    If (ntec-129=ntpc) m4=1
+
+    If (ntec-129-1=ntpc) m5=1
+    If (ntec-129+1=ntpc) m6=1
+    If (ntec+129-1=ntpc) m7=1
+    If (ntec+129+1=ntpc) m8=1
+   Endif
+  Loop
+  If (m4=0 And key=56 And playery>0 And (type[n-129]!=2 And type[n-129]!=4 And type[n-129]!=5 And type[n-129]!=7)) 
+    playery=playery-1
+  Endif
+  If (m3=0 And key=50 And playery<129-1 And (type[n+129]!=2 And type[n+129]!=4 And type[n+129]!=5 And type[n+129]!=7))
+    playery=playery+1
+  Endif
+  If (m1=0 And key=54 And playerx<129-1 And (type[n+1]!=2 And type[n+1]!=4 And type[n+1]!=5 And type[n+1]!=7))
+    playerx=playerx+1
+  Endif
+  If (m2=0 And key=52 And playerx>0 And (type[n-1]!=2 And type[n-1]!=4 And type[n-1]!=5 And type[n-1]!=7)) 
+    playerx=playerx-1
+  Endif
+
+  If (m5=0 And key=55 And playery>0 And playerx>0 And (type[n-129-1]!=2 And type[n-129-1]!=4 And type[n-129-1]!=5 And type[n-129-1]!=7)) 
+    playery=playery-1; playerx=playerx-1
+  Endif
+  If (m6=0 And key=57 And playery>0 And playerx<129-1 And (type[n-129+1]!=2 And type[n-129+1]!=4 And type[n-129+1]!=5 And type[n-129+1]!=7))
+    playery=playery-1; playerx=playerx+1
+  Endif
+  If (m7=0 And key=49 And playerx>0 And playery<129-1 And (type[n+129-1]!=2 And type[n+129-1]!=4 And type[n+129-1]!=5 And type[n+129-1]!=7))
+    playerx=playerx-1; playery=playery+1
+  Endif
+  If (m8=0 And key=51 And playerx<129-1 And playery<129-1 And (type[n+129+1]!=2 And type[n+129+1]!=4 And type[n+129+1]!=5 And type[n+129+1]!=7)) 
+    playerx=playerx+1; playery=playery+1
+  Endif
+  If (oldpos!=playerx+playery*129) oldturn=oldturn+1
+
+
+  Do n=0,16640
+   /////////////////////////////////////////////////////////Shadows
+    If (shadow[n]=1) shadow[n]=2
+    If (shadow[n]!=2) shadow[n]=1
+    rx=playerx-xx[n]
+    ry=playery-yy[n]
+    rc=sqrt(rx*rx+ry*ry)
+    If (rc>view)
+      If (shadow[n]!=2) shadow[n]=0
+    Endif
+    If (rc<=view)
+      rxx=rx; ryy=ry
+      Do d=0.0,view-1
+        ry=ryy; rx=rxx
+        ry=ry*(d/view); rx=rx*(d/view)
+        If (type[playerx-rx+(playery-ry)*129]=2 Or type[playerx-rx+(playery-ry)*129]=4 Or type[playerx-rx+(playery-ry)*129]=5 Or type[playerx-rx+(playery-ry)*129]=7)
+          If (shadow[n]=2) Break
+          shadow[n]=0; Break
+        Endif
+        If (d=view-1) shadow[n]=1
+      Loop
+    Endif
+
+    ////////////////////////////////////////////////////////////////Tiles
+    If (playerx<xx[n]+17 And playerx>xx[n]-17 And playery<yy[n]+14 And playery>yy[n]-14 And shadow[n]!=0)
+      imx=0; imy=0
+      If (shadow[n]=1)
+        If (type[n]=0) imx=15*0;imy=0 //Grass
+        If (type[n]=1) imx=15*1;imy=0 //Water
+        If (type[n]=2) imx=15*2;imy=0 //Mountain
+        If (type[n]=3) imx=15*3;imy=0 //Sand
+        If (type[n]=4) imx=15*4;imy=0 //Tree Trunk
+        If (type[n]=5) imx=15*5;imy=0 //Wood House Wall
+        If (type[n]=6) imx=15*6;imy=0 //Wood House Floor
+        If (type[n]=7) imx=15*7;imy=0 //Door Closed
+        If (type[n]=8) imx=15*8;imy=0 //Door Open
+      Endif
+      If (shadow[n]=2)
+        If (type[n]=0) imx=15*0;imy=15 //Grass
+        If (type[n]=1) imx=15*1;imy=15 //Water
+        If (type[n]=2) imx=15*2;imy=15 //Mountain
+        If (type[n]=3) imx=15*3;imy=15 //Sand
+        If (type[n]=4) imx=15*4;imy=15 //Tree Trunk
+        If (type[n]=5) imx=15*5;imy=15 //Wood House Wall
+        If (type[n]=6) imx=15*6;imy=15 //Wood House Floor
+        If (type[n]=7) imx=15*7;imy=15 //Door Closed
+        If (type[n]=8) imx=15*8;imy=15 //Door Open
+      Endif
+      bitblt (imb, (xx[n]-playerx)*15+640/2-80, (yy[n]-playery)*15+482/2-65, 15,15, imx,imy)
+    Endif
+  Loop
+  
+  ///////////////////////////////////////////////////////////Display Items
+  Do n=0,299
+    imx=0; imy=15*5
+    If (item[n]!="" And shadow[itemx[n]+itemy[n]*129]=1)
+      If (item[n]="Knife") imx=15*0
+      If (item[n]="Carrot") imx=15*1
+      If (item[n]="Tracker") imx=15*2
+      If (item[n]="Rabbit Corpse") imx=15*3
+      If (item[n]="Wolf Corpse") imx=15*4
+      If (item[n]="Set Trap") imx=15*5
+      If (item[n]="Closed Trap") imx=15*6
+      If (item[n]="Hunter Corpse") imx=15*7
+      If (item[n]="Rifle") imx=15*8
+      bitblt (imb, (itemx[n]-playerx)*15+640/2-80, (itemy[n]-playery)*15+482/2-65, 15,15, imx,imy)
+    Endif 
+    ////////////////////////////////////////////////////////////Player Steps on Trap
+    If (item[n]="Set Trap" And playerx+playery*129=itemx[n]+itemy[n]*129 And activatetrap<=0)
+      item[n]="Closed Trap"
+      Do n=5,1 Step -1
+        news[n]=news[n-1]
+      Loop
+      addnews="The Trap snaps up, hurting you"; news[0]=addnews
+      hp=hp-(random(50)+50)
+    Endif
+  Loop
+
+  ////////////////////////////////////////////////////////////Creating More Enemies
+  If (newnpc>=50) 
+    newnpc=newnpc-50
+    neweplace=0; neweplace2=0
+    Do n=0,16640
+      If (type[n]=0) neweplace=neweplace+1
+    Loop
+    neweplace2=random(neweplace)
+    neweplace=0
+    Do n=0,16640
+      If (type[n]=0) neweplace=neweplace+1
+      If (neweplace=neweplace2)
+        Do en=0,29
+          If (enemy[en]="" And en<10)
+            a=random(2)
+            If (a=0) 
+              enemy[en]="Rabbit"
+            Endif
+            If (a=1) 
+              enemy[en]="Wolf"
+            Endif
+            ex[en]=xx[n]; ey[en]=yy[n]
+            If (enemy[en]="Rabbit") espeed[en]=20; ehp[en]=40
+            If (enemy[en]="Wolf") espeed[en]=12; ehp[en]=100
+            emove[en]=espeed[en]
+            edest[en]=ex[en]+ey[en]*129
+            edead[en]=0
+            Break
+          Endif
+        Loop
+        Break
+      Endif
+    Loop
+  Endif
+
+  ///////////////////////////////////////////////////////////Enemy Display
+  Do en=0,29
+    /////////////////////////////////////////////////Enemy dead
+    If (edead[en]=0 And enemy[en]!="" And ehp[en]<=0)
+        kills=kills+1
+        edead[en]=1
+        ehp[en]=0
+        Do nn=0,299
+          If (item[nn]="")
+            item[nn]=enemy[en]+" Corpse"
+            itemx[nn]=ex[en]; itemy[nn]=ey[en]
+            Break
+          Endif
+        Loop
+        Do n=5,1 Step -1
+          news[n]=news[n-1]
+        Loop
+        addnews="You kill the "+enemy[en]; news[0]=addnews
+        enemy[en]=""
+        ex[en]=-1
+        ey[en]=-1
+        edead[en]=0
+    Endif
+
+    ///////////////////////////////////////////////////Dodged or Attack Player
+    If (turn!=moveenemies) 
+      att=0
+      If (enemy[en]="Wolf" And (ex[en]+ey[en]*129+1=playerx+playery*129 Or ex[en]+ey[en]*129-1=playerx+playery*129 Or ex[en]+ey[en]*129+129=playerx+playery*129 Or ex[en]+ey[en]*129-129=playerx+playery*129)) att=1
+      If (enemy[en]="Wolf" And (ex[en]+ey[en]*129+129+1=playerx+playery*129 Or ex[en]+ey[en]*129+129-1=playerx+playery*129 Or ex[en]+ey[en]*129-129+1=playerx+playery*129 Or ex[en]+ey[en]*129-129-1=playerx+playery*129)) att=1
+      If (enemy[en]="Rabbit" And ehp[en]<30)
+        If (ex[en]+ey[en]*129+1=playerx+playery*129) att=1
+        If (ex[en]+ey[en]*129-1=playerx+playery*129) att=1
+        If (ex[en]+ey[en]*129+129=playerx+playery*129) att=1
+        If (ex[en]+ey[en]*129-129=playerx+playery*129) att=1
+        If (ex[en]+ey[en]*129+129+1=playerx+playery*129) att=1
+        If (ex[en]+ey[en]*129+129-1=playerx+playery*129) att=1
+        If (ex[en]+ey[en]*129-129+1=playerx+playery*129) att=1
+        If (ex[en]+ey[en]*129-129-1=playerx+playery*129) att=1
+      Endif
+      If (att=1)
+          dodgechance=random(3)
+          If (dodgechance=0)
+            toc=0
+            times=0
+            m1=0; m2=0; m3=0; m4=0
+            Do nn=0,29
+              If (playerx+playery*129+1=ex[nn]+ey[nn]*129) m1=1
+              If (playerx+playery*129-1=ex[nn]+ey[nn]*129) m2=1
+              If (playerx+playery*129+129=ex[nn]+ey[nn]*129) m3=1
+              If (playerx+playery*129-129=ex[nn]+ey[nn]*129) m4=1
+            Loop
+            Do
+              toc=random(4)
+              times=times+1
+              If (toc=0 And (type[playerx+playery*129+1]=0 Or type[playerx+playery*129+1]=3 Or type[playerx+playery*129+1]=6) And m1=0) playerx=playerx+1; Break
+              If (toc=1 And (type[playerx+playery*129-1]=0 Or type[playerx+playery*129-1]=3 Or type[playerx+playery*129-1]=6) And m2=0) playerx=playerx-1; Break
+              If (toc=2 And (type[playerx+playery*129+129]=0 Or type[playerx+playery*129+129]=3 Or type[playerx+playery*129+129]=6) And m3=0) playery=playery+1; Break
+              If (toc=3 And (type[playerx+playery*129-129]=0 Or type[playerx+playery*129-129]=3 Or type[playerx+playery*129-129]=6) And m4=0) playery=playery-1; Break
+              If (times>10) Break
+            Loop
+            Do n=5,1 Step -1
+              news[n]=news[n-1]
+            Loop
+            addnews="You dodged the "+enemy[en]+"'s attack"
+            news[0]=addnews
+          Endif
+          If (dodgechance>0)
+            If (enemy[en]="Wolf") dam=random(8)+6
+            If (enemy[en]="Rabbit") dam=random(4)+2
+            hp=hp-dam
+            Do n=5,1 Step -1
+              news[n]=news[n-1]
+            Loop
+            addnews="The "+enemy[en]+" hit you"
+            news[0]=addnews
+          Endif
+          Goto donepath
+      Endif
+    Endif
+
+    //////////////////////////////////////////////////////////////On destination item
+    Do nn=0,299
+      If (ex[en]+ey[en]*129=itemx[nn]+itemy[nn]*129)
+        If (item[nn]="Rabbit Corpse" And enemy[en]="Wolf")
+          item[nn]=""
+        Endif
+        If (item[nn]="Carrot" And enemy[en]="Rabbit")
+          item[nn]=""
+        Endif
+        If (item[nn]="Set Trap")
+          ehp[en]=ehp[en]-(random(60)+90)
+          item[nn]="Closed Trap"
+          Do n=5,1 Step -1
+            news[n]=news[n-1]
+          Loop
+          addnews="The Trap snaps up, hurting the "+enemy[en]; news[0]=addnews
+        Endif
+      Endif
+      //If (edest[en]=itemx[nn]+itemy[nn]*129 And item[nn]="") //////////If item gone
+      //  edest[en]=ex[en]+ey[en]*129; Goto donepath
+      //Endif 
+    Loop
+
+    imx=0; imy=15*4
+    If (enemy[en]!="")
+      If (enemy[en]="Rabbit") imx=15*0
+      If (enemy[en]="Wolf") imx=15*1
+      If (enemy[en]="Deer") imx=15*2
+      If (enemy[en]="Bear") imx=15*3
+
+      If (turn!=moveenemies)
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////Enemy Pathfinding
+mo=0
+Do n=1,playerspeed
+  If (emove[en]>0) emove[en]=emove[en]-1
+  If (emove[en]<=0) emove[en]=espeed[en]; mo=mo+1
+Loop
+Do mmo=0,mo-1
+ntpc=ex[en]+ey[en]*129; ntec=playerx+playery*129
+If (mo=0 Or ntpc+1=ntec Or ntpc-1=ntec Or ntpc+129=ntec Or ntpc-129=ntec Or ntpc+129+1=ntec Or ntpc+129-1=ntec Or ntpc-129+1=ntec Or ntpc-129-1=ntec Or ntpc=ntec) Goto donepath
+Do n=0,16640
+  olist[n]=0
+  clist[n]=0
+  dist[n]=0
+Loop
+mx=ex[en]; my=ey[en]
+mz=mx+my*129
+olist[mz]=1
+dist[mz]=1
+Do
+  If (edest[en]=-1) edest[en]=playerx+playery*129
+  If (edest[en]=ex[en]+ey[en]*129) ////////////////////////////If on destination and idle
+    newspot=0
+    inhouse=0
+    If (type[ex[en]+ey[en]*129]=6) inhouse=1
+    Do mmm=0,16640
+      If (type[mmm]=6 And inhouse=1) newspot=newspot+1
+      If (type[mmm]=0 Or type[mmm]=3 Or type[mmm]=6 Or type[mmm]=8 And inhouse=0) newspot=newspot+1
+    Loop
+    newspot2=random(newspot)
+    newspot=0
+    Do mmm=0,16640
+      If (type[mmm]=6 And inhouse=1) newspot=newspot+1
+      If (type[mmm]=0 Or type[mmm]=3 Or type[mmm]=6 Or type[mmm]=8 And inhouse=0) newspot=newspot+1
+      If (newspot=newspot2) edest[en]=mmm; Break
+    Loop
+  Endif
+  ntpc=ex[en]+ey[en]*129; ntec=playerx+playery*129
+  If (ntpc+1=ntec Or ntpc-1=ntec Or ntpc+129=ntec Or ntpc-129=ntec Or ntpc+129+1=ntec Or ntpc+129-1=ntec Or ntpc-129+1=ntec Or ntpc-129-1=ntec Or ntpc=ntec) Break
+  dis=100000
+  Do n=0,16640
+    If (dist[n]<dis And olist[n]=1 And clist[n]=0) dis=dist[n]
+  Loop
+
+  //////////////////////////////////////////////////////////////////////////If no way to destination
+  If (dis=100000) 
+    edest[en]=ex[en]+ey[en]*129
+    Goto donepath
+  Endif
+
+  Do n=0,16640
+    If (olist[n]=1 And dis=dist[n])
+      toc=0
+      m1=0;m2=0;m3=0;m4=0;m5=0;m6=0;m7=0;m8=0
+      Do mm=0,29
+        If (ex[en]+ey[en]*129+1=ex[mm]+ey[mm]*129) m1=1
+        If (ex[en]+ey[en]*129+129=ex[mm]+ey[mm]*129) m2=1
+        If (ex[en]+ey[en]*129-1=ex[mm]+ey[mm]*129) m3=1
+        If (ex[en]+ey[en]*129-129=ex[mm]+ey[mm]*129) m4=1
+
+        If (ex[en]+ey[en]*129+129+1=ex[mm]+ey[mm]*129) m5=1
+        If (ex[en]+ey[en]*129+129-1=ex[mm]+ey[mm]*129) m6=1
+        If (ex[en]+ey[en]*129-129-1=ex[mm]+ey[mm]*129) m7=1
+        If (ex[en]+ey[en]*129-129+1=ex[mm]+ey[mm]*129) m8=1
+      Loop
+      If (m1=0 And (type[n+1  ]=0 Or type[n+1  ]=3 Or type[n+1  ]=6 Or type[n+1  ]=8 Or type[n+1  ]=0) And xx[n]<129-1 And olist[n+1 ]=0 And clist[n+1 ]=0) olist[n+1 ]=1; olist[n]=0; clist[n]=1; dist[n+1 ]=dist[n]+1; toc=1
+      If (m2=0 And (type[n+129]=0 Or type[n+129]=3 Or type[n+129]=6 Or type[n+129]=8 Or type[n+129]=0) And yy[n]<129-1 And olist[n+129]=0 And clist[n+129]=0) olist[n+129]=1; olist[n]=0; clist[n]=1; dist[n+129]=dist[n]+1; toc=1
+      If (m3=0 And (type[n-1  ]=0 Or type[n-1  ]=3 Or type[n-1  ]=6 Or type[n-1  ]=8 Or type[n-1  ]=0) And xx[n]>0     And olist[n-1 ]=0 And clist[n-1 ]=0) olist[n-1 ]=1; olist[n]=0; clist[n]=1; dist[n-1 ]=dist[n]+1; toc=1
+      If (m4=0 And (type[n-129]=0 Or type[n-129]=3 Or type[n-129]=6 Or type[n-129]=8 Or type[n-129]=0) And yy[n]>0     And olist[n-129]=0 And clist[n-129]=0) olist[n-129]=1; olist[n]=0; clist[n]=1; dist[n-129]=dist[n]+1; toc=1
+
+      If (m5=0 And (type[n+129+1]=0 Or type[n+129+1]=3 Or type[n+129+1]=6 Or type[n+129+1]=8 Or type[n+129+1]=0) And xx[n]<129-1 And yy[n]<129-1 And olist[n+129+1]=0 And clist[n+129+1]=0)
+        olist[n+129+1]=1; olist[n]=0; clist[n]=1; dist[n+129+1]=dist[n]+1; toc=1
+      Endif
+      If (m6=0 And type[n+129-1]=0 Or type[n+129-1]=3 Or type[n+129-1]=6 Or type[n+129-1]=8 Or type[n+129-1]=0)
+        If (yy[n]<129-1 And xx[n]>0 And olist[n+129-1]=0 And clist[n+129-1]=0) 
+        olist[n+129-1]=1; olist[n]=0; clist[n]=1; dist[n+129-1]=dist[n]+1; toc=1
+        Endif
+      Endif
+      If (m7=0 And (type[n-129-1]=0 Or type[n-129-1]=3 Or type[n-129-1]=6 Or type[n-129-1]=8 Or type[n-129-1]=0) And yy[n]>0 And xx[n]>0 And olist[n-129-1]=0 And clist[n-129-1]=0) 
+        olist[n-129-1]=1; olist[n]=0; clist[n]=1; dist[n-129-1]=dist[n]+1; toc=1
+      Endif
+      If (m8=0 And type[n-129+1]=0 Or type[n-129+1]=3 Or type[n-129+1]=6 Or type[n-129+1]=8 Or type[n-129+1]=0)
+        If (yy[n]>0 And xx[n]<129-1 And olist[n-129+1]=0 And clist[n-129+1]=0) 
+        olist[n-129+1]=1; olist[n]=0; clist[n]=1; dist[n-129+1]=dist[n]+1; toc=1
+        Endif
+      Endif
+      If (m1=1 And m2=1 And m3=1 And m4=1 And m5=1 And m6=1 And m7=1 And m8=1) Goto donepath
+
+      ////////////////////////////////////////If wolf, follow player
+      If (n=playerx+playery*129)
+
+  If (enemy[en]="Wolf" And edest[en]!=playerx+playery*129)
+    If (dist[n]<8) 
+      edest[en]=playerx+playery*129; Goto donepath
+    Endif
+  Endif
+  If (enemy[en]="Wolf" And edest[en]=playerx+playery*129)
+    If (dist[n]>14)
+      edest[en]=ex[en]+ey[en]*129; Goto donepath
+    Endif
+  Endif
+      Endif
+
+     ////////////////////////////////////////////Go to certain items
+     Do mm=0,299
+       If (n=itemx[mm]+itemy[mm]*129 And edest[en]!=itemx[mm]+itemy[mm]*129)
+         rx=itemx[mm]-ex[en]
+         ry=itemy[mm]-ey[en]
+         rc=sqrt(rx*rx+ry*ry)
+         If (enemy[en]="Wolf" And item[mm]="Rabbit Corpse" And dist[n]<100)
+           edest[en]=itemx[mm]+itemy[mm]*129; Goto donepath
+         Endif
+         If (enemy[en]="Rabbit" And item[mm]="Carrot" And dist[n]<100)
+           edest[en]=itemx[mm]+itemy[mm]*129; Goto donepath
+         Endif
+       Endif
+     Loop
+
+     /////////////////////////////////////////////
+
+      If (toc=0) olist[n]=0; clist[n]=1
+    Endif
+  Loop
+  If (olist[edest[en]]=1) 
+    mz=edest[en]
+    Do
+      toc=0
+      If (toc=0 And dist[mz+1 ]=dist[mz]-1) toc=1; mz=mz+1
+      If (toc=0 And dist[mz-1 ]=dist[mz]-1) toc=2; mz=mz-1
+      If (toc=0 And dist[mz+129]=dist[mz]-1) toc=3; mz=mz+129
+      If (toc=0 And dist[mz-129]=dist[mz]-1) toc=4; mz=mz-129
+      If (toc=0 And dist[mz+129+1]=dist[mz]-1) toc=5; mz=mz+129+1
+      If (toc=0 And dist[mz-129-1]=dist[mz]-1) toc=6; mz=mz-129-1
+      If (toc=0 And dist[mz+129-1]=dist[mz]-1) toc=7; mz=mz+129-1
+      If (toc=0 And dist[mz-129+1]=dist[mz]-1) toc=8; mz=mz-129+1
+      If (dist[mz]=1) 
+        If (toc=1) ex[en]=ex[en]-1
+        If (toc=2) ex[en]=ex[en]+1
+        If (toc=3) ey[en]=ey[en]-1
+        If (toc=4) ey[en]=ey[en]+1
+        If (toc=5) ex[en]=ex[en]-1; ey[en]=ey[en]-1
+        If (toc=6) ex[en]=ex[en]+1; ey[en]=ey[en]+1
+        If (toc=7) ex[en]=ex[en]+1; ey[en]=ey[en]-1
+        If (toc=8) ex[en]=ex[en]-1; ey[en]=ey[en]+1
+        If (edest[en]=playerx+playery*129) edest[en]=-1
+        Break
+      Endif
+    Loop
+    Break
+  Endif
+Loop
+Loop
+donepath:
+
+      Endif
+      If (shadow[ex[en]+ey[en]*129]=1 Or equip="Tracker") bitblt (imb, (ex[en]-playerx)*15+640/2-80, (ey[en]-playery)*15+482/2-65, 15,15, imx,imy)      
+    Endif
+  Loop
+
+  ///////////////////////////////////////////////////////////Player Display
+  bitblt (imb, 640/2-80,482/2-65, 15,15, 0,45)
+
+  /////////////////////////////////////////////////////////////HUD
+  solidcolor(Black)
+  solidrectangle(640-150,0,640,482)
+  solidrectangle(0,482-100,640,482)
+  solidcolor(White)
+  line(640-150,0,640-150,482)
+  line(0,482-100,640-150,482-100)
+
+  Outtextxy(640-140,10,"HP")
+  Outtextxy(640-115,10,itot(hp))
+  Outtextxy(640-140,40,"Speed")
+  Outtextxy(640-90,40,itot(20-playerspeed))
+  Outtextxy(640-140,60,"Equipped:")
+  Outtextxy(640-115,75,equip)
+
+  Outtextxy(640-140,95,"Kills:")
+  Outtextxy(640-115,110,itot(kills))
+
+
+  ///////////////////////////////////////////////////////News
+  Do n=0,5
+    Outtextxy(10,482-20-15*n,news[n])
+  Loop
+
+  ////////////////////////////////////////////////Full Inventory?
+  cantpickup=0
+  Do n=0,3
+    If (inv[n]="")
+      inv[n]=inv[n+1]
+      inv[n+1]=""
+    Endif
+  Loop
+  If (inv[4]!="") cantpickup=1 
+  playerspeed=14 
+  Do n=0,3
+    If (inv[n]="") playerspeed=playerspeed-1
+  Loop
+  If (equip="") playerspeed=playerspeed-1
+
+  //////////////////////////////////////////////////////////Show Inventory
+  If (key=105) //Pressed i
+    textd=0
+    ml=10
+    Do
+      selectscreen(1)
+      key=readkey()
+      solidcolor(Black)
+      solidrectangle(5,5,15+ml*15,30+15*textd)
+      textd=0
+      Do n=0,4
+        If (inv[n]!="")
+          Outtextxy(30,25+textd*15,inv[n])
+          If (ml<length(inv[n])) ml=length(inv[n])
+          textd=textd+1
+        Endif
+      Loop
+      Outtextxy(10,10,"Inventory")
+      selectscreen(0)
+      bitbltscreen(1)   
+      If (key=48 Or key=105) Break
+      Delay(10)
+    Loop 
+  Endif
+
+  ///////////////////////////////////////////////////////////////////////////////////////Attack
+  If (key=97) //Pressed a
+    selectscreen(1)
+    solidcolor(Black)
+    ml=length("Attack what?")
+    solidrectangle(5,5,15+ml*10,30)
+    Outtextxy(10,10,"Attack what?")
+    selectscreen(0)
+    bitbltscreen(1)
+    dir=-2
+    Do 
+      key=readkey()
+      If (key=56) dir=-129 //up
+      If (key=52) dir=-1   //left
+      If (key=50) dir=129  //down
+      If (key=54) dir=1    //right
+      If (key=55) dir=-129-1 //upleft
+      If (key=57) dir=-129+1//upright
+      If (key=49) dir=129-1 //downleft
+      If (key=51) dir=129+1//downright
+      If (key=48) Break
+
+      If (dir!=-2)
+        Do en=0,29
+          If (playerx+playery*129+dir=ex[en]+ey[en]*129 And enemy[en]!="" And edead[en]=0)
+            hitwith=""
+            dam=random(5)+1
+            ////////////////////////////////////////////////////////////////////////////Weapon Damage
+            If (equip="Knife") dam=random(10)+20
+            If (equip="Carrot") dam=random(5)+3
+
+            //////////////////////////////////////////////Dodging Attack
+            dodgechance=random(3)
+          If (dodgechance=0)
+            toc=0
+            times=0
+            Do
+              toc=random(4)
+              times=times+1
+              If (toc=0 And (type[ex[en]+ey[en]*129+1]=0 Or type[ex[en]+ey[en]*129+1]=3 Or type[ex[en]+ey[en]*129+1]=6) And ex[en]+ey[en]*129+1!=playerx+playery*129) ex[en]=ex[en]+1; Break
+              If (toc=1 And (type[ex[en]+ey[en]*129-1]=0 Or type[ex[en]+ey[en]*129-1]=3 Or type[ex[en]+ey[en]*129-1]=6) And ex[en]+ey[en]*129-1!=playerx+playery*129) ex[en]=ex[en]-1; Break
+              If (toc=2 And (type[ex[en]+ey[en]*129+129]=0 Or type[ex[en]+ey[en]*129+129]=3 Or type[ex[en]+ey[en]*129+129]=6) And ex[en]+ey[en]*129+129!=playerx+playery*129) ey[en]=ey[en]+1; Break
+              If (toc=3 And (type[ex[en]+ey[en]*129-129]=0 Or type[ex[en]+ey[en]*129-129]=3 Or type[ex[en]+ey[en]*129-129]=6) And ex[en]+ey[en]*129-129!=playerx+playery*129) ey[en]=ey[en]-1; Break
+              If (times>10) Break
+            Loop
+            Do n=5,1 Step -1
+              news[n]=news[n-1]
+            Loop
+            If (hitwith="") hitwith="Fist"
+            addnews="The "+enemy[en]+" dodged your attack"
+            news[0]=addnews
+          Endif
+          ////////////////////////////////////////Getting hit
+          If (dodgechance>0)
+            ehp[en]=ehp[en]-dam
+            Do n=5,1 Step -1
+              news[n]=news[n-1]
+            Loop
+            hitwith=equip
+            If (hitwith="") hitwith="Fist"
+            addnews="You hit the "+enemy[en]+" with your "+hitwith
+            news[0]=addnews
+          Endif
+            oldturn=oldturn+1
+            Break
+           Endif
+          If (en=29) dir=-2
+        Loop  
+        If (dir!=-2) Break  
+      Endif
+
+      Delay(10)
+    Loop
+
+  Endif
+
+  ////////////////////////////////////////////////////////////Throw
+  If (key=116) //Pressed t
+    selectscreen(1)
+    solidcolor(Black)
+    ml=length("Throw in what direction?")
+    solidrectangle(5,5,15+ml*10,30)
+    Outtextxy(10,10,"Throw in what direction?")
+    selectscreen(0)
+    bitbltscreen(1)
+    dir=-2
+    Do 
+      key=readkey()
+      If (key=56) dir=-129 //up
+      If (key=52) dir=-1   //left
+      If (key=50) dir=129  //down
+      If (key=54) dir=1    //right
+      If (key=55) dir=-129-1 //upleft
+      If (key=57) dir=-129+1//upright
+      If (key=49) dir=129-1 //downleft
+      If (key=51) dir=129+1//downright
+      If (key=48) Break
+
+      If (dir!=-2)
+       If (equip!="")
+        Do n=5,1 Step -1
+          news[n]=news[n-1]
+        Loop
+        addnews="You throw your equipped "+equip; news[0]=addnews
+        throwitem=playerx+playery*129
+        hite=0; endthrow=0
+        Do n=0,8
+          Do nn=0,29
+            If (throwitem=ex[nn]+ey[nn]*129) 
+              //////////////////////////////////////////////////Weapon Throw Damage
+              dam=random(10)+10
+              If (equip="Knife") dam=random(30)+20
+              ehp[nn]=ehp[nn]-dam 
+              hite=1
+              Do n=5,1 Step -1
+                news[n]=news[n-1]
+              Loop
+              addnews="You hit the "+enemy[nn]+" with your thrown "+equip; news[0]=addnews
+              Break
+            Endif
+          Loop
+          Do nn=0,299
+            If (throwitem=itemx[nn]+itemy[nn]*129 And item[nn]="Set Trap")
+              item[nn]="Closed Trap"
+              hite=1
+            Endif
+          Loop
+          If ((type[throwitem]!=0 And type[throwitem]!=3 And type[throwitem]!=6 And type[throwitem]!=8) Or n=8) endthrow=1
+          If (hite=1) endthrow=1
+          If (endthrow=1)
+            Do nn=0,299
+              If (item[nn]="")
+                item[nn]=equip; itemx[nn]=(throwitem)%129; itemy[nn]=(throwitem)/129
+                equip=""
+                Break
+              Endif
+            Loop
+            Break
+          Endif
+          If (type[throwitem+dir]=0 Or type[throwitem+dir]=3 Or type[throwitem+dir]=6 Or type[throwitem+dir]=8)
+            throwitem=throwitem+dir
+          Endif
+        Loop
+        oldturn=oldturn+1
+        Break
+      Endif
+     Endif
+
+      Delay(10)
+    Loop
+
+  Endif
+  
+  ////////////////////////////////////////////////////////////Shoot Rifle
+  If (key=115 And equip="Rifle") //Pressed s
+    selectscreen(1)
+    solidcolor(Black)
+    ml=length("Shoot in what direction?")
+    solidrectangle(5,5,15+ml*10,30)
+    Outtextxy(10,10,"Shoot in what direction?")
+    selectscreen(0)
+    bitbltscreen(1)
+    dir=-2
+    Do 
+      key=readkey()
+      If (key=56) dir=-129 //up
+      If (key=52) dir=-1   //left
+      If (key=50) dir=129  //down
+      If (key=54) dir=1    //right
+      If (key=55) dir=-129-1 //upleft
+      If (key=57) dir=-129+1//upright
+      If (key=49) dir=129-1 //downleft
+      If (key=51) dir=129+1//downright
+      If (key=48) Break
+
+     If (dir!=-2)
+      If (bullets>0)
+       bullets=bullets-1
+       Do n=5,1 Step -1
+         news[n]=news[n-1]
+       Loop
+       addnews="You shoot your Rifle and have "+itot(bullets)+" bullets left"; news[0]=addnews
+        throwitem=playerx+playery*129
+        hite=0; endthrow=0
+        Do n=0,8
+          Do nn=0,29
+            If (throwitem=ex[nn]+ey[nn]*129) 
+              //////////////////////////////////////////////////Rifle Damage
+              ehp[nn]=ehp[nn]-(random(60)+50)
+              hite=1
+              Do n=5,1 Step -1
+                news[n]=news[n-1]
+              Loop
+              addnews="You shot the "+enemy[nn]+" with your Rifle"; news[0]=addnews
+              Break
+            Endif
+          Loop
+          If ((type[throwitem]!=0 And type[throwitem]!=3 And type[throwitem]!=6 And type[throwitem]!=8) Or n=8) endthrow=1
+          If (hite=1) endthrow=1
+          If (endthrow=1)
+            Break
+          Endif
+          If (type[throwitem+dir]=0 Or type[throwitem+dir]=3 Or type[throwitem+dir]=6 Or type[throwitem+dir]=8)
+            throwitem=throwitem+dir
+          Endif
+        Loop
+        oldturn=oldturn+1
+        Break
+      Endif
+      If (bullets<=0) 
+       Do n=5,1 Step -1
+         news[n]=news[n-1]
+       Loop
+       addnews="You have no bullets left"; news[0]=addnews
+       Break
+      Endif
+    Endif
+
+      Delay(10)
+    Loop
+
+  Endif
+
+  ////////////////////////////////////////////////////////////Equip Item
+  If (key=101 And inv[0]!="") //Pressed e
+    pick=0
+    textd=0
+    ml=10
+    Do
+      selectscreen(1)
+      key=readkey()
+      solidcolor(Black)
+      solidrectangle(5,5,15+ml*15,30+15*textd)
+      textd=0
+      Do n=0,4
+        If (inv[n]!="")
+          If (pick=textd) Outtextxy(22,25+pick*15,">"); picki=n
+          Outtextxy(30,25+textd*15,inv[n])
+          If (ml<length(inv[n])) ml=length(inv[n])
+          textd=textd+1
+        Endif
+      Loop
+      Outtextxy(10,10,"Equip what?")
+      selectscreen(0)
+      bitbltscreen(1)  
+      If (key=56 And pick>0)       pick=pick-1
+      If (key=50 And pick<textd-1) pick=pick+1
+      If (key=13) 
+        Do n=5,1 Step -1
+          news[n]=news[n-1]
+        Loop
+        addnews="You equip a "+inv[picki]; news[0]=addnews
+        ce=inv[picki]; inv[picki]=equip; equip=ce
+        oldturn=oldturn+1
+        Break   
+      Endif
+      If (key=48 Or key=105) Break
+      Delay(10)
+    Loop 
+  Endif  
+
+  ////////////////////////////////////////////////////////////Unequip
+  If (key=69) //Pressed E
+   If (equip!="")
+    If (cantpickup=0)
+      Do n=5,1 Step -1
+        news[n]=news[n-1]
+      Loop
+      addnews="You put your equipped "+equip+" into your inventory"; news[0]=addnews
+      Do n=0,4
+        If (inv[n]="") inv[n]=equip; equip=""; Break
+      Loop
+      openturn=openturn+1
+    Endif
+    If (cantpickup=1)
+      Do n=5,1 Step -1
+        news[n]=news[n-1]
+      Loop
+      addnews="Inventory full so you drop your equipped "+equip+" instead"; news[0]=addnews
+      Do n=0,299
+        If (item[n]="") item[n]=equip; itemx[n]=playerx; itemy[n]=playery; equip=""; Break
+      Loop
+    Endif
+   Endif
+  Endif
+ 
+  //////////////////////////////////////////////////////////Drop Inv Item
+  If (key=100) //Pressed d
+    pick=0
+    textd=0
+    ml=10
+    Do
+      selectscreen(1)
+      key=readkey()
+      solidcolor(Black)
+      solidrectangle(5,5,15+ml*15,30+15*textd)
+      textd=0
+      Do n=0,4
+        If (inv[n]!="")
+          If (pick=textd) Outtextxy(22,25+pick*15,">"); picki=n
+          Outtextxy(30,25+textd*15,inv[n])
+          If (ml<length(inv[n])) ml=length(inv[n])
+          textd=textd+1
+        Endif
+      Loop
+      Outtextxy(10,10,"Drop What?")
+      selectscreen(0)
+      bitbltscreen(1)
+      If (key=56 And pick>0)       pick=pick-1
+      If (key=50 And pick<textd-1) pick=pick+1
+      If (key=13 And inv[picki]!="") 
+        Do n=5,1 Step -1
+          news[n]=news[n-1]
+        Loop
+        If (inv[picki]="Closed Trap") 
+          inv[picki]="Set Trap"
+          activatetrap=2
+        Endif
+        addnews="You dropped a "+inv[picki]; news[0]=addnews
+        Do n=0,299
+          If (item[n]="") item[n]=inv[picki]; itemx[n]=playerx; itemy[n]=playery; Break
+        Loop
+        inv[picki]=""; oldturn=oldturn+1 
+        Break
+      Endif   
+      If (key=48) Break
+      Delay(10)
+    Loop 
+  Endif
+
+  /////////////////////////////////////////////////////////////Pick Up
+  If (key=112) //Pressed p
+    pick=0
+    textd=0
+    ml=10
+    Do
+      selectscreen(1)
+      key=readkey()
+      solidcolor(Black)
+      solidrectangle(5,5,15+ml*15,30+15*textd)
+      textd=0
+      Do n=0,299
+        If (item[n]!="" And playerx=itemx[n] And playery=itemy[n])
+          If (pick=textd) Outtextxy(22,25+pick*15,">"); picki=n
+          Outtextxy(30,25+textd*15,item[n])
+          If (ml<length(item[n])) ml=length(item[n])
+          textd=textd+1
+        Endif
+      Loop
+      Outtextxy(10,10,"Pick up what?")
+      selectscreen(0)
+      bitbltscreen(1)
+      If (key=56 And pick>0)       pick=pick-1
+      If (key=50 And pick<textd-1) pick=pick+1
+      If (key=13 And item[picki]!="")
+       If (cantpickup=0) 
+        Do n=5,1 Step -1
+          news[n]=news[n-1]
+        Loop
+        addnews="You picked up the "+item[picki]; news[0]=addnews
+        Do n=0,4
+          If (inv[n]="") inv[n]=item[picki]; Break
+        Loop
+        item[picki]=""; oldturn=oldturn+1 
+        Break
+       Endif
+       If (cantpickup=1)
+        Do n=5,1 Step -1
+          news[n]=news[n-1]
+        Loop
+        addnews="Your inventory is full"; news[0]=addnews
+        Break         
+       Endif
+      Endif
+      If (key=48) Break
+      Delay(10)
+    Loop
+  Endif
+
+  /////////////////////////////////////////////////////////////Open/Close 
+  If (key=111) //Pressed o
+    selectscreen(1)
+    solidcolor(Black)
+    ml=length("Open/Close what?")
+    solidrectangle(5,5,15+ml*10,30)
+    Outtextxy(10,10,"Open/Close what?")
+    selectscreen(0)
+    bitbltscreen(1)
+    n=playerx+playery*129
+    doesopen=1
+    Do 
+      key=readkey()
+      If (key=56 And (type[n-129]=7 Or type[n-129]=8)) type[n-129]=15-type[n-129]; oldturn=oldturn+1; Break//up
+      If (key=52 And (type[n-1]=7 Or type[n-1]=8)) type[n-1]=15-type[n-1]; oldturn=oldturn+1; Break //left
+      If (key=50 And (type[n+129]=7 Or type[n+129]=8)) type[n+129]=15-type[n+129]; oldturn=oldturn+1; Break //down
+      If (key=54 And (type[n+1]=7 Or type[n+1]=8)) type[n+1]=15-type[n+1]; oldturn=oldturn+1; Break //right
+
+      If (key=55 And (type[n-129-1]=7 Or type[n-129-1]=8)) type[n-129-1]=15-type[n-129-1]; oldturn=oldturn+1; Break//upleft
+      If (key=57 And (type[n-129+1]=7 Or type[n-129+1]=8)) type[n-129+1]=15-type[n-129+1]; oldturn=oldturn+1; Break //upright
+      If (key=49 And (type[n+129-1]=7 Or type[n+129-1]=8)) type[n+129-1]=15-type[n+129-1]; oldturn=oldturn+1; Break //downleft
+      If (key=51 And (type[n+129+1]=7 Or type[n+129+1]=8)) type[n+129+1]=15-type[n+129+1]; oldturn=oldturn+1; Break //downright
+
+      If (key=48) doesopen=0; Break
+      Delay(10)
+    Loop
+    If (key!=48 And doesopen=1)
+      Do n=5,1 Step -1
+        news[n]=news[n-1]
+      Loop
+      news[0]="You used the door"
+    Endif
+  Endif
+
+  /////////////////////////////////////////////////////Waiting
+  If (key=53)  
+    oldturn=oldturn+1
+  Endif
+
+  /////////////////////////////////////////////////////Plus Turn
+  moveenemies=turn
+  If (oldturn!=turn) 
+    turn=turn+1
+    newnpc=newnpc+1
+    If (hp<100 And type[playerx+playery*129]=6) hp=hp+1
+    If (activatetrap>0) activatetrap=activatetrap-1
+  Endif
+  oldturn=turn
+  
+  ///////////////////////////////////////////////////////Player Dead
+  If (hp<=0) 
+    bitblt (imb, 640/2-80,482/2-65, 15,15, 15,45)
+    forecolor(Darkred)
+    Outtextxy(640-115,10,"Dead")
+    selectscreen(0)
+    bitbltscreen(1)
+    waitkey(27)
+    Goto quit
+  Endif
+
+  //////////////////////////////////////////////////////Player Drown
+  If (turn!=moveenemies And type[playerx+playery*129]=1)
+    drown=drown-1
+    If (drown=5)
+      Do n=5,1 Step -1
+        news[n]=news[n-1]
+      Loop
+      addnews="You are having trouble swimming"; news[0]=addnews
+    Endif
+    If (drown<=0)
+      hp=0
+      Do n=5,1 Step -1
+        news[n]=news[n-1]
+      Loop
+      addnews="You have drowned"; news[0]=addnews
+    Endif
+  Endif
+  If (drown<10 And type[playerx+playery*129]!=1) drown=10
+
+  ////////////////////////////////////////////////////////Misc
+  If (key=27) Goto quit 
+  selectscreen(0)
+  bitbltscreen(1)
+  Delay(10)
+Loop
+
+quit:
+selectscreen(0)
+bitbltscreen(1)
+close blt (imb)
+close image (imi)
+quit
