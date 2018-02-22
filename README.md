@@ -3,6 +3,8 @@ HunterRL is a survival wildlife-hunting 'roguelike' utilizing artificial intelli
 
 This game was created during under a time-limit 2012 7-Day Roguelike Challenge.
 
+'HunterRL' was coded in a C-interpreted language called SiMPLE, developed by a Bob Bishop, a former Apple-II employee and developer.
+
 ![Alt text](/Screenshots/HunterRL_3.png?raw=true "Cover")
 
 Your goal of is to hunt animals. 
