@@ -3,6 +3,8 @@ Survival wildlife-hunting 'roguelike' utilizing artificial intelligence to simul
 
 This game was created during the 2012 7-Day Roguelike Challenge.
 
+![Alt text](/Screenshots/HunterRL_3.png?raw=true "Cover")
+
 Your goal of is to hunt animals. 
 Specifically: Rabbits and Wolves.
 
@@ -22,5 +24,7 @@ Pressing 0 (Zero) while preforming an action will cancel it.
 Rabbits are attracted by carrots.
 Wolves are attracted by rabbit corpses.
 
-When the Tracker is equipped, you will be able to see enemies in the shadows.
+When the Tracker is equipped, you will be able to see enemies who are out of your line-of-sight.
 Rifles can be found on deceased hunters in the wilderness.
+
+![Alt text](/Screenshots/HunterRL_2.png?raw=true "Cover")
